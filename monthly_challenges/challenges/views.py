@@ -1,5 +1,6 @@
 from django.shortcuts import render
 from django.urls import reverse
+from django.template.loader import render_to_string
 from django.http import HttpResponse, HttpResponseNotFound, HttpResponseRedirect
 
 # Create your views here.
@@ -19,22 +20,24 @@ monthly_challenges = {
     "september": eat,
     "october": learn,
     "november": eat,
-    "december": walk,
+    "december": None,
 }
 
 challenge_text = ""
 
 def index(request):
     months = list(monthly_challenges.keys())
-    list_items = ""
+    # list_items = ""
 
-    for month in months:
-        month_path = reverse("month-challenge", args=[month])
-        list_items += f"<li><a href= {month_path}>{month.capitalize()}</a></li>"
+    # for month in months:
+    #     month_path = reverse("month-challenge", args=[month])
+    #     list_items += f"<li><a href= {month_path}>{month.capitalize()}</a></li>"
     
-    response_data = f"<ul>{list_items}</ul>"
+    # response_data = f"<ul>{list_items}</ul>"
 
-    return HttpResponse(response_data)
+    return render(request=request, template_name="challenges/index.html", context= {
+        "months": months
+    })
 
 def monthly_challenge_number(request, month):
     months = list(monthly_challenges.keys())
@@ -42,14 +45,20 @@ def monthly_challenge_number(request, month):
         try:
             forward_month = months[month - 1]
         except:
-            return HttpResponseNotFound("Not a specified month")
+            response_data = render_to_string("404.html")
+            return HttpResponseNotFound(response_data)
     else:
-        return HttpResponseNotFound("Not a specified month")
+        response_data = render_to_string("404.html")
+        return HttpResponseNotFound(response_data)
     return HttpResponseRedirect(forward_month)
 
 def monthly_challenge(request, month):
     try: 
         challenge_text = monthly_challenges[month]
+        return render(request=request, template_name="challenges/challenge.html",context={
+            "text" : challenge_text,
+            "month": month.capitalize(),
+        })
     except:
-        return HttpResponseNotFound("Not a supported month")
-    return HttpResponse(challenge_text)
+        response_data = render_to_string("404.html")
+        return HttpResponseNotFound(response_data)
